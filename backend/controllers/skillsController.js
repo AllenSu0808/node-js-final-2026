@@ -46,6 +46,10 @@ async function deleteSkill(req, res, next) {
     }
     return successResponse(res, 200, { affected: result.rowCount });
   } catch (error) {
+    // 捕捉外鍵約束違反，若有課程參考此技能，無法刪除
+    if (error.code === '23503') {
+      return failResponse(res, 400, '此技能仍被課程使用，無法刪除');
+    }
     return next(error);
   }
 }

@@ -50,6 +50,10 @@ async function deleteCreditPackage(req, res, next) {
     }
     return successResponse(res, 200, { affected: result.rowCount });
   } catch (error) {
+    // 捕捉外鍵約束違反，若有購買紀錄參考此方案，無法刪除
+    if (error.code === '23503') {
+      return failResponse(res, 400, '此方案已有人購買，無法刪除');
+    }
     return next(error);
   }
 }
