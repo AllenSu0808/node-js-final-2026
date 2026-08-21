@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const { failResponse } = require('./utils/response');
 
 const app = express();
 
@@ -16,9 +17,15 @@ app.get('/healthcheck', (req, res) => {
 
 app.use('/api', require('./routes'));
 
+// 404：所有路由都比對不到時才會走到這裡，統一回傳 JSON 格式，避免前端收到 Express 預設的 HTML 錯誤頁。
+app.use((req, res) => {
+  failResponse(res, 404, '找不到該路由');
+});
+
+// 全域錯誤處理 middleware：集中攔截路由與其他 middleware 拋出的例外，統一錯誤回應格式並記錄 log，方便後續追查。
 app.use((err, req, res, next) => {
   console.error(err);
-  res.status(500).json({ status: 'failed', message: '伺服器錯誤' });
+  failResponse(res, 500, '伺服器錯誤');
 });
 
 module.exports = app;
