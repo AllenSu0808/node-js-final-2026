@@ -166,7 +166,7 @@ async function createCourse(req, res, next) {
     } = req.body;
 
     if (
-      isUndefined(skillId) || isNotValidString(skillId) ||
+      isUndefined(skillId) || isNotValidString(skillId) || !isValidUUID(skillId) ||
       isUndefined(name) || isNotValidString(name) ||
       isUndefined(description) || isNotValidString(description) ||
       isUndefined(startAt) || isNotValidString(startAt) ||
@@ -233,7 +233,7 @@ async function updateMyCourse(req, res, next) {
     } = req.body;
 
     if (
-      isUndefined(skillId) || isNotValidString(skillId) ||
+      isUndefined(skillId) || isNotValidString(skillId) || !isValidUUID(skillId) ||
       isUndefined(name) || isNotValidString(name) ||
       isUndefined(description) || isNotValidString(description) ||
       isUndefined(startAt) || isNotValidString(startAt) ||
