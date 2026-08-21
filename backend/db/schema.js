@@ -71,21 +71,6 @@ const STATEMENTS = [
 
 /** 依序建立所有資料表（IF NOT EXISTS，可重複執行） */
 async function ensureSchema() {
-  // 先 DROP 舊表（如果存在），確保新舊表結構相容
-  const dropStatements = [
-    'DROP TABLE IF EXISTS course_bookings CASCADE;',
-    'DROP TABLE IF EXISTS credit_purchases CASCADE;',
-    'DROP TABLE IF EXISTS courses CASCADE;',
-    'DROP TABLE IF EXISTS coach_skills CASCADE;',
-    'DROP TABLE IF EXISTS coaches CASCADE;',
-    'DROP TABLE IF EXISTS credit_packages CASCADE;',
-    'DROP TABLE IF EXISTS skills CASCADE;',
-    'DROP TABLE IF EXISTS users CASCADE;',
-  ];
-  for (const statement of dropStatements) {
-    await query(statement);
-  }
-  // 再 CREATE 新表
   for (const statement of STATEMENTS) {
     await query(statement);
   }
