@@ -54,4 +54,30 @@ async function deleteCreditPackage(req, res, next) {
   }
 }
 
-module.exports = { listCreditPackages, createCreditPackage, deleteCreditPackage };
+/** POST /api/credit-package/:creditPackageId（需登入） */
+async function buyCreditPackage(req, res, next) {
+  try {
+    const { creditPackageId } = req.params;
+    if (!isValidUUID(creditPackageId)) {
+      return failResponse(res, 400, 'ID錯誤');
+    }
+    const pkgResult = await query(
+      'SELECT id, credit_amount, price FROM credit_packages WHERE id = $1',
+      [creditPackageId]
+    );
+    if (pkgResult.rows.length === 0) {
+      return failResponse(res, 400, 'ID錯誤');
+    }
+    const pkg = pkgResult.rows[0];
+    await query(
+      `INSERT INTO credit_purchases (user_id, credit_package_id, purchased_credits, price_paid)
+       VALUES ($1, $2, $3, $4)`,
+      [req.user.id, creditPackageId, pkg.credit_amount, pkg.price]
+    );
+    return successResponse(res, 200, null);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { listCreditPackages, createCreditPackage, deleteCreditPackage, buyCreditPackage };

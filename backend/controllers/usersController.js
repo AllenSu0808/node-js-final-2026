@@ -145,4 +145,55 @@ async function updatePassword(req, res, next) {
   }
 }
 
-module.exports = { signup, login, getProfile, updateProfile, updatePassword };
+/** GET /api/users/credit-package */
+async function listMyCreditPackages(req, res, next) {
+  try {
+    const result = await query(
+      `SELECT cp.name, p.purchased_credits, p.price_paid::float AS price_paid, p.purchase_at
+       FROM credit_purchases p
+       JOIN credit_packages cp ON cp.id = p.credit_package_id
+       WHERE p.user_id = $1
+       ORDER BY p.purchase_at DESC`,
+      [req.user.id]
+    );
+    return successResponse(res, 200, result.rows);
+  } catch (error) {
+    return next(error);
+  }
+}
+
+/** GET /api/users/courses */
+async function getMyCourses(req, res, next) {
+  try {
+    const creditResult = await query(
+      'SELECT COALESCE(SUM(purchased_credits), 0) AS total_purchased FROM credit_purchases WHERE user_id = $1',
+      [req.user.id]
+    );
+    const usageResult = await query(
+      'SELECT COUNT(*) AS used FROM course_bookings WHERE user_id = $1 AND cancelled_at IS NULL',
+      [req.user.id]
+    );
+    const totalPurchased = Number(creditResult.rows[0].total_purchased);
+    const creditUsage = Number(usageResult.rows[0].used);
+
+    const bookingsResult = await query(
+      `SELECT b.course_id, c.name, c.start_at, c.end_at, c.meeting_url, u.name AS coach_name, b.cancelled_at
+       FROM course_bookings b
+       JOIN courses c ON c.id = b.course_id
+       JOIN users u ON u.id = c.user_id
+       WHERE b.user_id = $1
+       ORDER BY c.start_at ASC`,
+      [req.user.id]
+    );
+
+    return successResponse(res, 200, {
+      credit_remain: totalPurchased - creditUsage,
+      credit_usage: creditUsage,
+      course_booking: bookingsResult.rows,
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = { signup, login, getProfile, updateProfile, updatePassword, listMyCreditPackages, getMyCourses };
